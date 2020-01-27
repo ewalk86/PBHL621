@@ -1,0 +1,24 @@
+---
+title: "PBHL621 data cleaning lesson"
+author: "Ethan Walker"
+date: "Started 27 Jan 2020, 27 Jan 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(tidyverse)
+library(readxl)
+library(naniar)
+library(lubridate)
+library(zoo)
+```
+
+
+```{r}
+
+```
+
