@@ -1,7 +1,7 @@
 ---
 title: "PBHL621 class and data prep"
 author: "Ethan Walker"
-date: "Started 27 Jan 2020, 29 Jan 2020"
+date: "Started 27 Jan 2020, 4 Feb 2020"
 output: pdf_document
 ---
 
@@ -26,6 +26,16 @@ nsch_data_full <- read_csv("Input/nsch_2017_2018_data_full.csv")
 
 # Pull subsets of the data and save as CSV
 ```{r}
+# filter practice dataset of 1st 100 rows and 50 columns
+nsch_practice <- nsch_data_full %>% 
+   head(100) %>% 
+   select(1:25)
+
+# save subset of data
+write_csv(nsch_practice, "Output/nsch_practice.csv")
+write_rds(nsch_practice, "Output/nsch_practice.rds")
+
+
 # filter for 2017 data
 nsch_data_2017 <- nsch_data_full %>% 
    filter(str_detect(HHID, "^17"))
@@ -43,9 +53,3 @@ nsch_data_2018 <- nsch_data_full %>%
 write_csv(nsch_data_2018, "Output/nsch_data_2018.csv")
 write_rds(nsch_data_2018, "Output/nsch_data_2018.rds")
 ```
-
-# Make some intentional errors in the CSV file, then reload
-```{r}
-
-```
-

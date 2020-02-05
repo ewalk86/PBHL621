@@ -7,6 +7,8 @@
 *.csv
 *.docx
 *.tex
+*.html
 Input
 Output
 2017-2018_nsch/
+pbhl621_data_cleaning_practice.Rmd

@@ -1,0 +1,308 @@
+---
+title: "PBHL621 data cleaning practice"
+author: "Ethan Walker"
+date: "5 Feb 2020"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+R Markdowns are better than R scripts. They are easier to note/annotate,
+you don't have to deal with working directories, and you can output or "knit" the
+entire file to either HTML, PDF, or Word.
+
+If you use Markdowns within an R Project, it is an easy way to keep your code
+organized for a particular project or class.
+
+I'll start by showing you how to set up a Project and copy my code to a Markdown.
+
+Then we'll run through some data cleaning and summary techniques.
+
+
+## Install and load libraries
+```{r, message=FALSE}
+#install.packages("tidyverse")
+#install.packages("readxl")
+#install.packages("naniar")
+#install.packages("lubridate")
+#install.packages("gmodels")
+
+library(tidyverse)
+library(readxl)
+library(naniar)
+library(lubridate)
+library(gmodels)
+```
+
+
+The dataset we will work with this week is a small subset of the National Survey 
+of Children's Health (NSCH). I have made some intentional errors in the dataset. 
+I'll walk through some example code with you to clean and present the data,
+then give you time to work through similar issues on your own.
+
+
+## First, load the data
+### Side note: in a Markdown, you can run code in chunks, line-by-line, or by highlighting
+```{r}
+# Get in the habit of saving objects using "<-", not with "="
+nsch_practice <- read_xlsx("Input/nsch_practice.xlsx")
+
+# data has 100 rows (observations) and 27 columns (variables)
+```
+
+
+## Initial glance/summary of the data
+```{r}
+summary(nsch_practice)
+```
+
+
+Using the "summary()" function gives a first glance at the data.
+Other functions will help us look more in-depth at individual variables.
+
+
+## Look at individual variables/columns
+```{r}
+table(nsch_practice$HHLANGUAGE)
+```
+
+We can see that this variable is not cleaned up yet, so we'll work on that next.
+
+
+## Cleaning data and coding using "pipes"
+
+"Piping" means using "%>%" to carry the code over to the next line. This enables 
+you to run chunks of code at once with numerous functions, while also saving as 
+your work as a new dataset. Piping saves time and space, and is a more efficient 
+way to code in R.
+```{r}
+# Start with the full, raw practice dataset and save it as a new dataset
+# Always save as a new dataset -- never override your existing dataset
+nsch_cleaning_1 <- nsch_practice %>% 
+   # the "count()" function creates a table, similar to what we used above with "table()"
+   count(HHLANGUAGE)
+nsch_cleaning_1
+
+
+# Next, let's fix some of the odd values in our variable
+nsch_cleaning_1 <- nsch_practice %>% 
+   # use the "mutate()" function to change variables or create new variables
+   # Here, we use the "if_else()" function within "mutate()" to fix our variable
+   mutate(language = if_else(HHLANGUAGE == "??", "99", HHLANGUAGE)) %>% 
+   count(language)
+nsch_cleaning_1
+# Now we see the "?" is fixed - now coded as 99
+
+
+# Add to our code to fix the "0" answer
+nsch_cleaning_1 <- nsch_practice %>% 
+   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
+                             "99", HHLANGUAGE)) %>% 
+   count(language)
+nsch_cleaning_1
+# The "??" and "0" are now coded as 99
+
+
+# Next, let's recode the variable using the "fct_collapse()" function
+nsch_cleaning_1 <- nsch_practice %>% 
+   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
+                             "99", HHLANGUAGE),
+          language = fct_collapse(language,
+                                  "english" = c("1", "english"),
+                                  "spanish" = c("2", "spanish"),
+                                  "french" = "3",
+                                  "NA" = "99")) %>% 
+   count(language)
+nsch_cleaning_1
+
+
+# Saving the dataset - don't finish by running "count()"
+# Note the dimensions of the dataset in the Environment window
+nsch_cleaning_1 <- nsch_practice %>% 
+   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
+                             "99", HHLANGUAGE),
+          language = fct_collapse(language,
+                                  "english" = c("1", "english"),
+                                  "spanish" = c("2", "spanish"),
+                                  "french" = "3",
+                                  "NA" = "99"))
+```
+
+
+## Working with numeric and categorical data data
+```{r}
+nsch_clean <- nsch_cleaning_1 %>% 
+   # select specific variables
+   select(HHID, SC_SEX, SC_AGE_YEARS, language) %>% 
+   # give the variables new names
+   # I prefer creating new variables over renaming variables
+   mutate(id = as.factor(HHID),
+          sex = as.factor(SC_SEX),
+          age_child = as.numeric(SC_AGE_YEARS)) %>% 
+   select(id, sex, age_child, language) %>% 
+   # you can also select by subtracting variables
+   # group by each variable in the dataset and check the data
+   count(sex)
+nsch_clean
+
+
+# change specific values to NA
+nsch_clean <- nsch_cleaning_1 %>% 
+   select(HHID, SC_SEX, SC_AGE_YEARS, language) %>% 
+   mutate(id = as.factor(HHID),
+          sex = as.factor(SC_SEX),
+          age_child = as.numeric(SC_AGE_YEARS)) %>% 
+   select(id, sex, age_child, language) %>% 
+   # use "replace_with_na" to change values to NA
+   replace_with_na(sex, replace = list(sex = c(0, 7, 99))) %>% 
+   replace_with_na(age_child, replace = list(age_child = c(99))) %>% 
+   count(age_child)
+nsch_clean
+
+
+# create new categorical age variables
+# save as a new "clean" dataset
+nsch_clean <- nsch_cleaning_1 %>% 
+   select(HHID, SC_SEX, SC_AGE_YEARS, language) %>% 
+   mutate(id = as.factor(HHID),
+          sex = as.factor(SC_SEX),
+          age_child = as.numeric(SC_AGE_YEARS)) %>% 
+   select(id, sex, age_child, language) %>% 
+   # use "replace_with_na" to change values to NA
+   replace_with_na(sex, replace = list(sex = c(0, 7, 99))) %>% 
+   replace_with_na(age_child, replace = list(age_child = c(99))) %>% 
+   # recode sex variable
+   # change age to categorical/factor
+   # collapse categories of a factor
+   mutate(sex = factor(sex, levels = c("1", "2"), labels = c("male", "female")),
+          age_child_cat = cut(age_child, breaks = c(0, 4, 8, 12, 16, 18),
+                              labels = c("<4", "4-7", "8-11", "12-15", "16+"),
+                              right = FALSE),
+          age_child_cat_2 = fct_collapse(age_child_cat,
+                                         "<12" = c("<4", "4-7", "8-11"),
+                                         "12+" = c("12-15", "16+")))
+
+summary(nsch_clean)
+```
+   
+
+## Summarizing categorical data
+```{r}
+# Make a table and save it
+nsch_table <- table(nsch_clean$sex, nsch_clean$age_child_cat,
+                    dnn = c("sex", "age"))
+
+
+prop.table(nsch_table) # proportions: all cells add to 1
+prop.table(nsch_table, 1) # proportions: rows add to 1
+prop.table(nsch_table, 2) # proportions: columns add to 1
+
+
+margin.table(nsch_table) # count: all cells
+margin.table(nsch_table, 1) # count: rows 
+margin.table(nsch_table, 2) # count: columns
+
+
+chisq.test(nsch_table) # chi square test
+
+
+# This functions comes from a separate package (gmodels)
+# It gives more robust tables
+CrossTable(nsch_clean$sex, nsch_clean$age_child_cat, prop.chisq = FALSE)
+
+
+# Make with 3 variables
+nsch_table_3 <- table(nsch_clean$sex, nsch_clean$age_child_cat, nsch_clean$language,
+                    dnn = c("sex", "age", "language"))
+nsch_table_3
+```
+
+## Summarizing numeric data
+```{r}
+nsch_summary_numeric <- nsch_clean %>% 
+   group_by(sex) %>% 
+   summarize("Mean Age" = mean(age_child))
+   #summarize("Mean Age" = mean(age_child, na.rm = TRUE))
+nsch_summary_numeric
+
+
+# Do you not want the NAs in the table? Filter them out
+nsch_summary_numeric <- nsch_clean %>% 
+   group_by(sex) %>% 
+   summarise("Mean Age" = mean(age_child, na.rm = TRUE)) %>% 
+   filter(!is.na(sex))
+nsch_summary_numeric
+
+
+# Add more summary stats
+nsch_summary_numeric <- nsch_clean %>% 
+   group_by(sex) %>% 
+   summarise("Mean Age" = mean(age_child, na.rm = TRUE),
+             "SD" = sd(age_child, na.rm = TRUE),
+             "n" = n(),
+             "Min" = min(age_child, na.rm = TRUE),
+             "25%" = quantile(age_child, 0.25, na.rm = TRUE),
+             "Median" = median(age_child, na.rm = TRUE),
+             "75%" = quantile(age_child, 0.75, na.rm = TRUE),
+             "Max" = max(age_child, na.rm = TRUE)) %>% 
+   filter(!is.na(sex))
+nsch_summary_numeric
+```
+
+## Working with dates and times
+### I added sample dates/times to this subset of the data
+```{r}
+# look at the formatting to decide how to work with the variables
+head(nsch_practice$DATE, 10)
+# date is in a "ymd" format
+head(nsch_practice$TIME, 10)
+# time had a random date added to it when it was imported
+
+# Now we can format date and time to make them easier to work with
+# Date will be the easier one to deal with
+nsch_datetimes <- nsch_practice %>% 
+   mutate(date = ymd(DATE))
+
+head(nsch_datetimes$date, 10)
+
+# To format time, we need to separate the time from the random date that was added
+nsch_datetimes <- nsch_practice %>% 
+   mutate(date = ymd(DATE)) %>% 
+   separate(TIME, into = c("trash", "time"), sep = " ", remove = FALSE) %>% 
+   unite("datetime", c("date", "time"), sep = " ", remove = FALSE) %>% 
+   mutate(datetime = ymd_hms(datetime),
+          id = as.factor(HHID)) %>% 
+   select(id, datetime, date, time)
+
+
+# Join the dates we just formatted with the clean dataset from above
+nsch_dates_joined <- nsch_clean %>% 
+   left_join(nsch_datetimes, by = "id")
+
+head(nsch_dates_joined, 5)
+
+# Use the new datetime variable to make new vars and arrange the data
+datetime_practice <- nsch_dates_joined %>% 
+   mutate(time_diff_days = as.numeric(lead(datetime) - datetime),
+          time_diff_hours = time_diff_days*24,
+          time_diff_min = time_diff_hours*60,
+          day_of_week = as.factor(weekdays(datetime)),
+          month_of_year = as.factor(month(datetime, label = TRUE, abbr = TRUE))) %>% 
+   arrange(age_child_cat, datetime)
+
+head(datetime_practice, 10)
+```
+
+
+## Save the cleaned, joined dataset
+```{r, include=FALSE, eval=FALSE}
+write_rds(datetime_practice, "Output/nsch_clean.rds")
+
+write_csv(datetime_practice, "Output/nsch_clean.csv")
+```
+
+
+##Lastly, try to "Knit" your Markdown to an HTML document
+
+

@@ -1,8 +1,7 @@
 ---
-title: "PBHL621 data visualization lesson"
+title: "PBHL621 data visualization"
 author: "Ethan Walker"
-date: "Started 27 Jan 2020, 27 Jan 2020"
-output: pdf_document
+date: "5 Feb 2020"
 ---
 
 ```{r setup, include=FALSE}
@@ -14,11 +13,116 @@ library(tidyverse)
 library(readxl)
 library(naniar)
 library(lubridate)
-library(zoo)
+library(gmodels)
 ```
 
-
+## Load clean dataset from earlier
 ```{r}
+nsch_clean <- read_rds("Output/nsch_clean.rds")
+```
 
+## Summarize the data to review the variables
+```{r}
+summary(nsch_clean)
+```
+
+## Make a bar plot using "ggplot()"
+### ggplot is a part of the "tidyverse" group of packages
+### It applies the same principles of piping
+```{r}
+# Simple bar plot of counts within age category
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat))
+nsch_barplot
+
+
+# Add "fill = sex" to look at distribution of sex within each bar
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat, fill = sex), color = "black")
+nsch_barplot
+
+
+# Change the plot theme
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat, fill = sex), color = "black") +
+     theme_minimal()
+nsch_barplot
+
+
+# Change the colors in the plot
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat, fill = sex), color = "black") +
+     theme_minimal() +
+     scale_fill_manual(values = c("lightgreen", "darkgreen"))
+nsch_barplot
+
+
+# Change the labels in the plot
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat, fill = sex), color = "black") +
+     theme_minimal() +
+     scale_fill_manual(values = c("lightgreen", "darkgreen")) +
+     labs(title = "Child age categories") +
+     xlab("Age category (years)") +
+     ylab("Count (# children)") 
+nsch_barplot
+
+
+# Use "theme" to manipulate essentially anything in the plot you want
+nsch_barplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_bar(aes(age_child_cat, fill = sex), color = "black") +
+     theme_minimal() +
+     scale_fill_manual(values = c("lightgreen", "darkgreen")) +
+     labs(title = "Child age categories") +
+     xlab("Age category (years)") +
+     ylab("Count (# children)") +
+     theme(title = element_text(size = 16),
+           axis.title = element_text(size = 14),
+           axis.text.x = element_text(size = 14, angle = 20),
+           axis.text.y = element_text(size = 14),
+           legend.text = element_text(size = 14),
+           panel.grid = element_blank())
+nsch_barplot
+```
+
+## Make a boxplot
+### Refer to the data visualization cheatsheet for ideas/troubleshooting
+```{r}
+# Simple boxplot of age by sex
+nsch_boxplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot() +
+     geom_boxplot(aes(sex, age_child))
+nsch_boxplot
+
+
+# Change themes, labels, colors, as with bar plot above
+nsch_boxplot <- nsch_clean %>% 
+   filter(!is.na(sex)) %>% 
+   ggplot(aes(sex, age_child)) +
+     geom_boxplot(fill = "lightblue") +
+     theme_minimal() +
+     labs(title = "Child age, grouped by sex") +
+     ylab("Age (years)") +
+     stat_summary(fun.y=mean, geom="point", shape=17, size=3, color="red") +
+     theme(title = element_text(size = 16),
+           axis.title = element_text(size = 14),
+           axis.title.x = element_blank(),
+           axis.text.x = element_text(size = 14),
+           axis.text.y = element_text(size = 14),
+           panel.grid = element_blank())
+nsch_boxplot
 ```
 
