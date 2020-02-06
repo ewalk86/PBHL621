@@ -1,7 +1,12 @@
 ---
 title: "PBHL621 data cleaning practice"
 author: "Ethan Walker"
-date: "5 Feb 2020"
+date: "10 Feb 2020"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,9 +24,13 @@ I'll start by showing you how to set up a Project and copy my code to a Markdown
 
 Then we'll run through some data cleaning and summary techniques.
 
+First, install the packages in the chunk below:
 
 ## Install and load libraries
 ```{r, message=FALSE}
+# The "#" at the beginning of a line means the code will not run
+# It's a helpful way to comment/annotate your code, or save code to run later
+
 #install.packages("tidyverse")
 #install.packages("readxl")
 #install.packages("naniar")
@@ -35,12 +44,14 @@ library(lubridate)
 library(gmodels)
 ```
 
+Next, download some cheatsheets: Help > Cheatsheets > Data Transformation & Data Visualization
+
+Now, on to the data.
 
 The dataset we will work with this week is a small subset of the National Survey 
 of Children's Health (NSCH). I have made some intentional errors in the dataset. 
 I'll walk through some example code with you to clean and present the data,
 then give you time to work through similar issues on your own.
-
 
 ## First, load the data
 ### Side note: in a Markdown, you can run code in chunks, line-by-line, or by highlighting
@@ -59,7 +70,12 @@ summary(nsch_practice)
 
 
 Using the "summary()" function gives a first glance at the data.
-Other functions will help us look more in-depth at individual variables.
+Initially, we see that some of the variables seem off. Things like ID, State, 
+and participant sex are being treated as numeric when they should be factors (categorical).
+Participant age is being treated as character, when it should be numeric.
+
+We can use other functions and techniques to help us look more in-depth at individual variables.
+For example, let's work with the "language" variable first (HHLANGUAGE):
 
 
 ## Look at individual variables/columns
@@ -73,7 +89,7 @@ We can see that this variable is not cleaned up yet, so we'll work on that next.
 ## Cleaning data and coding using "pipes"
 
 "Piping" means using "%>%" to carry the code over to the next line. This enables 
-you to run chunks of code at once with numerous functions, while also saving as 
+you to run chunks of code at once with numerous functions, while also saving 
 your work as a new dataset. Piping saves time and space, and is a more efficient 
 way to code in R.
 ```{r}
@@ -87,7 +103,7 @@ nsch_cleaning_1
 
 # Next, let's fix some of the odd values in our variable
 nsch_cleaning_1 <- nsch_practice %>% 
-   # use the "mutate()" function to change variables or create new variables
+   # Use the "mutate()" function to change variables or create new variables
    # Here, we use the "if_else()" function within "mutate()" to fix our variable
    mutate(language = if_else(HHLANGUAGE == "??", "99", HHLANGUAGE)) %>% 
    count(language)
@@ -130,7 +146,7 @@ nsch_cleaning_1 <- nsch_practice %>%
 ```
 
 
-## Working with numeric and categorical data data
+## Working with numeric and categorical data
 ```{r}
 nsch_clean <- nsch_cleaning_1 %>% 
    # select specific variables
@@ -141,8 +157,8 @@ nsch_clean <- nsch_cleaning_1 %>%
           sex = as.factor(SC_SEX),
           age_child = as.numeric(SC_AGE_YEARS)) %>% 
    select(id, sex, age_child, language) %>% 
-   # you can also select by subtracting variables
-   # group by each variable in the dataset and check the data
+   ## you can also select by subtracting variables
+   # Use "count()" to check the new variables and see if they needed further cleaning
    count(sex)
 nsch_clean
 
@@ -157,12 +173,11 @@ nsch_clean <- nsch_cleaning_1 %>%
    # use "replace_with_na" to change values to NA
    replace_with_na(sex, replace = list(sex = c(0, 7, 99))) %>% 
    replace_with_na(age_child, replace = list(age_child = c(99))) %>% 
-   count(age_child)
+   count(sex)
 nsch_clean
 
 
 # create new categorical age variables
-# save as a new "clean" dataset
 nsch_clean <- nsch_cleaning_1 %>% 
    select(HHID, SC_SEX, SC_AGE_YEARS, language) %>% 
    mutate(id = as.factor(HHID),
@@ -185,15 +200,37 @@ nsch_clean <- nsch_cleaning_1 %>%
 
 summary(nsch_clean)
 ```
-   
+  
+ 
+## Save the cleaned dataset
+```{r, include=FALSE, eval=FALSE}
+write_rds(nsch_clean, "Output/nsch_clean.rds")
+
+write_csv(nsch_clean, "Output/nsch_clean.csv")
+```
+ 
+
+Go to your Output folder and open the CSV to check it out.
+Notice anything off about the "age_child_cat" variable/values?
+Let's fix that and re-save the dataset. This is a good example of thinking
+through how you name variables, datasets, and even values in R. Some things
+have downstream impacts that you don't initially realize.
+
+Next, let's start with a fresh Global Environment (use the broom).
+Then, load your clean dataset:
+```{r}
+nsch_clean <- read_rds("Output/nsch_clean.rds")
+```
+
 
 ## Summarizing categorical data
 ```{r}
 # Make a table and save it
 nsch_table <- table(nsch_clean$sex, nsch_clean$age_child_cat,
-                    dnn = c("sex", "age"))
+                    dnn = c("sex", "age cat"))
 
 
+nsch_table # simple counts within each cell
 prop.table(nsch_table) # proportions: all cells add to 1
 prop.table(nsch_table, 1) # proportions: rows add to 1
 prop.table(nsch_table, 2) # proportions: columns add to 1
@@ -204,19 +241,17 @@ margin.table(nsch_table, 1) # count: rows
 margin.table(nsch_table, 2) # count: columns
 
 
-chisq.test(nsch_table) # chi square test
-
-
 # This functions comes from a separate package (gmodels)
 # It gives more robust tables
 CrossTable(nsch_clean$sex, nsch_clean$age_child_cat, prop.chisq = FALSE)
 
 
-# Make with 3 variables
+# Make a table with 3 variables
 nsch_table_3 <- table(nsch_clean$sex, nsch_clean$age_child_cat, nsch_clean$language,
                     dnn = c("sex", "age", "language"))
 nsch_table_3
 ```
+
 
 ## Summarizing numeric data
 ```{r}
@@ -249,6 +284,9 @@ nsch_summary_numeric <- nsch_clean %>%
    filter(!is.na(sex))
 nsch_summary_numeric
 ```
+
+
+######### If we have time ##########
 
 ## Working with dates and times
 ### I added sample dates/times to this subset of the data
@@ -296,13 +334,38 @@ head(datetime_practice, 10)
 
 
 ## Save the cleaned, joined dataset
-```{r, include=FALSE, eval=FALSE}
-write_rds(datetime_practice, "Output/nsch_clean.rds")
+```{r, include=TRUE, eval=FALSE}
+write_rds(datetime_practice, "Output/nsch_clean_dates.rds")
 
-write_csv(datetime_practice, "Output/nsch_clean.csv")
+write_csv(datetime_practice, "Output/nsch_clean_dates.csv")
 ```
 
 
-##Lastly, try to "Knit" your Markdown to an HTML document
+## Try to "Knit" your Markdown to an HTML document
 
+You need to install more software/packages to knit to PDF/Word.
+
+Check out the R Markdown cheatsheet and reference guide (Help > Cheatsheets)
+for more info on Markdown options and ways to present and share your code.
+
+If you use R a lot (dissertation?) or with groups of people, it can be helpful 
+to back your code up to Github. There are tutorials on how to get that set up
+online.
+
+## Finally, here are some helpful resources:
+
+https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html 
+
+https://www.rdocumentation.org/packages/dplyr/versions/0.7.8 
+
+https://www.statmethods.net/stats/frequencies.html 
+
+Or, an entire book on R for Data Science:
+
+https://r4ds.had.co.nz/ 
+
+One of the best things about R is the online community. If you want to do something
+specific in R, there is probably already a way to do it, and someone has probably
+already shared it online. Google is a great companion to R, so don't spend too
+much time struggling to figure things out before checking the web for a solution.
 

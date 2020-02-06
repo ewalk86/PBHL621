@@ -1,7 +1,7 @@
 ---
 title: "PBHL621 data visualization"
 author: "Ethan Walker"
-date: "5 Feb 2020"
+date: "13 Feb 2020"
 ---
 
 ```{r setup, include=FALSE}
@@ -28,11 +28,10 @@ summary(nsch_clean)
 
 ## Make a bar plot using "ggplot()"
 ### ggplot is a part of the "tidyverse" group of packages
-### It applies the same principles of piping
+### It applies the same principles of piping and building on previous lines of code
 ```{r}
 # Simple bar plot of counts within age category
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat))
 nsch_barplot
@@ -40,7 +39,6 @@ nsch_barplot
 
 # Add "fill = sex" to look at distribution of sex within each bar
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat, fill = sex), color = "black")
 nsch_barplot
@@ -48,7 +46,6 @@ nsch_barplot
 
 # Change the plot theme
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat, fill = sex), color = "black") +
      theme_minimal()
@@ -56,22 +53,21 @@ nsch_barplot
 
 
 # Change the colors in the plot
+# Try this website for some options: http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/ 
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat, fill = sex), color = "black") +
      theme_minimal() +
-     scale_fill_manual(values = c("lightgreen", "darkgreen"))
+     scale_fill_manual(values = c("#E69F00", "#009E73"))
 nsch_barplot
 
 
 # Change the labels in the plot
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat, fill = sex), color = "black") +
      theme_minimal() +
-     scale_fill_manual(values = c("lightgreen", "darkgreen")) +
+     scale_fill_manual(values = c("#E69F00", "#009E73")) +
      labs(title = "Child age categories") +
      xlab("Age category (years)") +
      ylab("Count (# children)") 
@@ -80,11 +76,10 @@ nsch_barplot
 
 # Use "theme" to manipulate essentially anything in the plot you want
 nsch_barplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_bar(aes(age_child_cat, fill = sex), color = "black") +
      theme_minimal() +
-     scale_fill_manual(values = c("lightgreen", "darkgreen")) +
+     scale_fill_manual(values = c("#E69F00", "#009E73")) +
      labs(title = "Child age categories") +
      xlab("Age category (years)") +
      ylab("Count (# children)") +
@@ -102,7 +97,6 @@ nsch_barplot
 ```{r}
 # Simple boxplot of age by sex
 nsch_boxplot <- nsch_clean %>% 
-   filter(!is.na(sex)) %>% 
    ggplot() +
      geom_boxplot(aes(sex, age_child))
 nsch_boxplot
@@ -116,7 +110,7 @@ nsch_boxplot <- nsch_clean %>%
      theme_minimal() +
      labs(title = "Child age, grouped by sex") +
      ylab("Age (years)") +
-     stat_summary(fun.y=mean, geom="point", shape=17, size=3, color="red") +
+     stat_summary(fun.y=mean, geom="point", shape=17, size=3, color="black") +
      theme(title = element_text(size = 16),
            axis.title = element_text(size = 14),
            axis.title.x = element_blank(),
