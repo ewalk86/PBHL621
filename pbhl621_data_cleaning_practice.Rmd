@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-R Markdowns are better than R scripts. They are easier to note/annotate,
+I recommend using R Markdowns over R scripts. They are easier to note/annotate,
 you don't have to deal with working directories, and you can output or "knit" the
 entire file to either HTML, PDF, or Word.
 
@@ -24,10 +24,16 @@ I'll start by showing you how to set up a Project and copy my code to a Markdown
 
 Then we'll run through some data cleaning and summary techniques.
 
-First, install the packages in the chunk below:
+
+#####
+
+
+Now that your Markdown is started, install the packages in the chunk below:
 
 ## Install and load libraries
-```{r, message=FALSE}
+Side note: in a Markdown, you can run code in chunks, line-by-line, or by 
+highlighting specific pieces. 
+```{r message=FALSE}
 # The "#" at the beginning of a line means the code will not run
 # It's a helpful way to comment/annotate your code, or save code to run later
 
@@ -54,7 +60,6 @@ I'll walk through some example code with you to clean and present the data,
 then give you time to work through similar issues on your own.
 
 ## First, load the data
-### Side note: in a Markdown, you can run code in chunks, line-by-line, or by highlighting
 ```{r}
 # Get in the habit of saving objects using "<-", not with "="
 nsch_practice <- read_xlsx("Input/nsch_practice.xlsx")
@@ -84,6 +89,11 @@ table(nsch_practice$HHLANGUAGE)
 ```
 
 We can see that this variable is not cleaned up yet, so we'll work on that next.
+
+Let's say this is how the language variable should be coded:
+1 = english
+2 = spanish
+3 = french
 
 
 ## Cleaning data and coding using "pipes"
@@ -173,7 +183,7 @@ nsch_clean <- nsch_cleaning_1 %>%
    # use "replace_with_na" to change values to NA
    replace_with_na(sex, replace = list(sex = c(0, 7, 99))) %>% 
    replace_with_na(age_child, replace = list(age_child = c(99))) %>% 
-   count(sex)
+   count(age_child)
 nsch_clean
 
 
