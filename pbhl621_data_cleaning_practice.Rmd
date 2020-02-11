@@ -115,7 +115,8 @@ nsch_cleaning_1
 nsch_cleaning_1 <- nsch_practice %>% 
    # Use the "mutate()" function to change variables or create new variables
    # Here, we use the "if_else()" function within "mutate()" to fix our variable
-   mutate(language = if_else(HHLANGUAGE == "??", "99", HHLANGUAGE)) %>% 
+   mutate(language = HHLANGUAGE) %>% 
+   mutate(language = if_else(language == "??", "99", language)) %>% 
    count(language)
 nsch_cleaning_1
 # Now we see the "?" is fixed - now coded as 99
@@ -123,8 +124,9 @@ nsch_cleaning_1
 
 # Add to our code to fix the "0" answer
 nsch_cleaning_1 <- nsch_practice %>% 
-   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
-                             "99", HHLANGUAGE)) %>% 
+   mutate(language = HHLANGUAGE) %>% 
+   mutate(language = if_else(language == "??" | language == "0", 
+                             "99", language)) %>% 
    count(language)
 nsch_cleaning_1
 # The "??" and "0" are now coded as 99
@@ -132,8 +134,9 @@ nsch_cleaning_1
 
 # Next, let's recode the variable using the "fct_collapse()" function
 nsch_cleaning_1 <- nsch_practice %>% 
-   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
-                             "99", HHLANGUAGE),
+   mutate(language = HHLANGUAGE,
+          language = if_else(language == "??" | language == "0", 
+                             "99", language),
           language = fct_collapse(language,
                                   "english" = c("1", "english"),
                                   "spanish" = c("2", "spanish"),
@@ -146,8 +149,9 @@ nsch_cleaning_1
 # Saving the dataset - don't finish by running "count()"
 # Note the dimensions of the dataset in the Environment window
 nsch_cleaning_1 <- nsch_practice %>% 
-   mutate(language = if_else(HHLANGUAGE == "??" | HHLANGUAGE == "0", 
-                             "99", HHLANGUAGE),
+   mutate(language = HHLANGUAGE,
+          language = if_else(language == "??" | language == "0", 
+                             "99", language),
           language = fct_collapse(language,
                                   "english" = c("1", "english"),
                                   "spanish" = c("2", "spanish"),
