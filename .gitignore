@@ -8,6 +8,10 @@
 *.docx
 *.tex
 *.html
+*.Rproj
+*.xlsx
+Data/
 Input
 Output
 2017-2018_nsch/
+markdown_example.Rmd
